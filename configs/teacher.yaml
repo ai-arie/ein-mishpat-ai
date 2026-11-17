@@ -1,0 +1,44 @@
+# M3a: teacher encoding of training texts + hard-negative mining.
+# Hebrew/Aramaic = text_plain, English = text_clean (same forms as KesherBench).
+model: f2llm-14b
+out_dir: data/train/teacher           # input tables, mining spec, negatives
+emb_dir: artifacts/emb/teacher         # <model>/<table>/shardNN_partNNNN.{npy,parquet}
+seed: 13
+max_length: {doc: 512, query: 256}
+batch_size: 64
+rows_per_job: 100000                  # encoding jobs are split so 8 GPUs stay busy
+# Link pairs: the later work is the query, the earlier work the target ("find the source").
+# Commentaries: Sefaria's base_text_titles / dependence decide first, then dates, then a seeded coin.
+max_queries_per_task: 300000          # unique single-segment query refs, interleaved by work
+mining:
+  depth: 200                          # exact top-k on GPU (depth 50 left 9-12 negatives/query on commentary/untyped: most top candidates score > 0.95 × positive)
+  keep: 30
+  neighbours: 2                       # ±2 segments of the query or a positive are not negatives
+  max_rel_score: 0.95                 # drop candidates scoring > 0.95 × best positive score
+# Query instruction per training task (documents get none). K-tasks reuse the KesherBench wording.
+tasks:
+  bitext_he2en: {source: d1, qlang: he, tlang: en, instruction: "Given a passage of Jewish text, retrieve its translation"}
+  bitext_en2he: {source: d1, qlang: en, tlang: he, instruction: "Given a passage of Jewish text, retrieve its translation"}
+  commentary: {source: d2, instruction: "Given a commentary, retrieve the text it comments on"}
+  ein_mishpat: {source: d2, instruction: "Given a halachic ruling, retrieve the passages that are its sources"}
+  mishnah_gemara: {source: d2, instruction: "Given a Talmud passage, retrieve the Mishnah it discusses or quotes"}
+  mesorat_hashas: {source: d2, instruction: "Given a passage of rabbinic literature, retrieve its parallel passages"}
+  parallel: {source: d2, instruction: "Given a passage of rabbinic literature, retrieve its parallel passages"}
+  quotation: {source: d2, instruction: "Given a passage, retrieve the earlier text it quotes"}
+  midrash: {source: d2, instruction: "Given a passage of Midrash, retrieve the verse it interprets"}
+  targum: {source: d2, instruction: "Given an Aramaic Targum passage, retrieve the verse it translates"}
+  sifrei_mitzvot: {source: d2, instruction: "Given a passage of Jewish text, retrieve related passages"}
+  untyped: {source: d2, instruction: "Given a passage of Jewish text, retrieve related passages"}
+  other: {source: d2, instruction: "Given a passage of Jewish text, retrieve related passages"}
+# Decided 2026-11-02: D1 pairs are kept if the teacher finds the paired side in its
+# top 10 in at least one direction (he→en or en→he; drops 4.5% outside liturgy, ~45% of linear
+# liturgy); whole works whose bitext looks misaligned (≥ 44% missed, median score < 0.5) are dropped.
+d1_filter:
+  drop_works: [Teshuvot Maharshal, Kuzari]
+# Decided 2026-11-02: a D3a translation is kept unless its teacher score with its own
+# source (English query → Hebrew doc) is below the given quantile of the same score for human D1
+# translations outside liturgy (0.05 → 0.416; drops ~3% instead of 14% for the top-10 rule, which
+# mostly removed short, generic but correct segments).
+d3a_filter:
+  human_quantile: 0.05
+  liturgy_pattern: "Linear|Siddur|Machzor|Selichot|Haggadah|Kinnot"

@@ -1,0 +1,28 @@
+# General-domain regression check: public tasks unrelated to Jewish texts, run as published,
+# never trained on and not redistributed. Task choices from the MTEB registry; revisions pinned.
+name: regression_general
+data_dir: data/bench/regression
+out_dir: artifacts/eval/regression
+seed: 13
+k_values: [1, 5, 10, 100]
+mrr_k: 10
+max_length: 512
+batch_size: 64
+tasks:
+  webfaq_heb:   # CC-BY-4.0; natural FAQ pairs from the web, Hebrew
+    repo: mteb/WebFAQRetrieval
+    revision: f64f483ad0f31d2e78209d524c14a4a867965959
+    format: webfaq
+    lang: heb
+    instruction: "Given a question, retrieve the passage that answers it"
+  webfaq_ara:   # CC-BY-4.0; the same task in another Semitic language
+    repo: mteb/WebFAQRetrieval
+    revision: f64f483ad0f31d2e78209d524c14a4a867965959
+    format: webfaq
+    lang: ara
+    instruction: "Given a question, retrieve the passage that answers it"
+  arguana_eng:  # CC-BY-SA-4.0; English
+    repo: mteb/arguana
+    revision: c22ab2a51041ffd869aaddef7af8d8215647e41a
+    format: beir
+    instruction: "Given a claim, find documents that refute the claim"

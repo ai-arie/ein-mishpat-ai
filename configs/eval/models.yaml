@@ -1,0 +1,23 @@
+# Model registry of the evaluation harness. `prompt_style: instruct` = "Instruct: {task}\nQuery: " on queries,
+# nothing on documents (F2LLM-v2 and Qwen3-Embedding model cards); `fixed` = the model's own prefixes.
+# Local paths (models/...) exist after training or converting the model.
+models:
+  # base models (F2LLM-v2) and the other models compared, each with the prompt its model card gives
+  f2llm-0.6b: {hf_id: codefuse-ai/F2LLM-v2-0.6B, prompt_style: instruct}
+  f2llm-1.7b: {hf_id: codefuse-ai/F2LLM-v2-1.7B, prompt_style: instruct}
+  f2llm-4b: {hf_id: codefuse-ai/F2LLM-v2-4B, prompt_style: instruct}
+  f2llm-8b: {hf_id: codefuse-ai/F2LLM-v2-8B, prompt_style: instruct}
+  f2llm-14b: {hf_id: codefuse-ai/F2LLM-v2-14B, prompt_style: instruct}
+  qwen3-0.6b: {hf_id: Qwen/Qwen3-Embedding-0.6B, prompt_style: instruct}
+  qwen3-4b: {hf_id: Qwen/Qwen3-Embedding-4B, prompt_style: instruct}
+  qwen3-8b: {hf_id: Qwen/Qwen3-Embedding-8B, prompt_style: instruct}
+  bge-m3: {hf_id: models/baselines/bge-m3, prompt_style: none}  # BAAI/bge-m3 converted to safetensors (its .bin weights do not load with torch 2.3); dense only
+  e5-large: {hf_id: intfloat/multilingual-e5-large, prompt_style: fixed, query_prompt: "query: ", doc_prompt: "passage: "}
+  torah-embed: {hf_id: RobBobin/torah-embed, prompt_style: none}  # English only: KesherBench K2a en->en
+  # the released models (Hugging Face) and the local training outputs they were made from
+  student-0.6b-full-d3b-bf16: {hf_id: ai-arie/ein-mishpat-ai-0.6b, prompt_style: instruct}  # ein-mishpat-ai-0.6b
+  student-1.7b-full-d3b-bf16: {hf_id: ai-arie/ein-mishpat-ai-1.7b, prompt_style: instruct}  # ein-mishpat-ai-1.7b
+  flagship-14b-ext-ls85: {hf_id: ai-arie/ein-mishpat-ai-14b, prompt_style: instruct}  # ein-mishpat-ai-14b: adapter scaled by 0.85, then merged (scripts/lora_scale.py)
+  student-0.6b-full-d3b: {hf_id: models/student-0.6b-full-d3b/final, prompt_style: instruct}  # float32 output of configs/train/student_0.6b_full_d3b.yaml
+  student-1.7b-full-d3b: {hf_id: models/student-1.7b-full-d3b/final, prompt_style: instruct}  # float32 output of configs/train/student_1.7b_full_d3b.yaml
+  flagship-14b-ext: {hf_id: models/flagship-14b-ext/final, prompt_style: instruct}  # 14B after 500 steps, adapter unscaled (configs/train/flagship_14b.yaml, then _ext)

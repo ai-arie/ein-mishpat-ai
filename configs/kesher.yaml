@@ -1,0 +1,55 @@
+# KesherBench construction.
+# Hebrew/Aramaic texts use text_plain (no niqqud/cantillation), English text_clean.
+# A query is test (dev) if any of its positives lies in a test (dev) work; `strict` marks queries
+# whose own work is held out too. Caps per split, interleaved across query works.
+out_dir: data/bench/kesher
+seed: 13
+caps: {test: 2000, dev: 500}
+max_query_segments: 1
+max_positive_segments: 5
+corpora:
+  bavli:      {category_prefix: "Talmud > Bavli > Seder", langs: [he]}
+  torah:      {category_prefix: "Tanakh > Torah", langs: [he, en]}
+  mishnah:    {category_prefix: "Mishnah > Seder", langs: [he]}
+  yerushalmi: {category_prefix: "Talmud > Yerushalmi > Seder", langs: [he]}
+tasks:
+  K1_halacha_talmud:
+    query: {category_prefix: "Halakhah > Mishneh Torah > Sefer", title_prefix: "Mishneh Torah, "}
+    corpus: bavli
+    conn_types: ["ein mishpat / ner mitsvah", "ein mishpat"]
+    settings: [he2he, en2he]
+  K2a_commentary_torah:
+    query: {category_prefix: "Tanakh", exclude_corpus: true}
+    corpus: torah
+    conn_types: [commentary]
+    settings: [he2he, en2he, en2en]
+  K2b_commentary_talmud:
+    query: {title_regex: "^(Rashi|Tosafot) on "}
+    corpus: bavli
+    conn_types: [commentary]
+    settings: [he2he, en2he]
+  K3_gemara_mishnah:
+    query: {category_prefix: "Talmud > Bavli > Seder"}
+    corpus: mishnah
+    conn_types: ["mishnah in talmud", "mesorat hashas"]
+    settings: [he2he, en2he]
+  K4a_bavli_yerushalmi:
+    query: {category_prefix: "Talmud > Bavli > Seder"}
+    corpus: yerushalmi
+    conn_types: ["related passage"]   # untyped links: ~30% unrelated in a 20-link hand check
+    settings: [he2he, en2he]
+  K4b_yerushalmi_bavli:
+    query: {category_prefix: "Talmud > Yerushalmi > Seder"}
+    corpus: bavli
+    conn_types: ["related passage"]   # untyped links: ~30% unrelated in a 20-link hand check
+    settings: [he2he, en2he]
+topics:
+  name: K5_topic_sources
+  # curated sources only: no sheets, no automatic aggregation, not only user-sourced
+  exclude_generated_by: [sheet-topic-aggregator, auto-curator, calculate_popular_writings_for_authors]
+  user_only_sources: [sefaria-users]
+  min_sources: 5
+  max_positive_segments: 30   # larger topics (up to 7,078 segments) stay in the pool as distractors only
+  distractors: 500000
+  dev_fraction: 0.34
+  settings: [he2he, en2he]

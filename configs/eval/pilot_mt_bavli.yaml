@@ -1,0 +1,15 @@
+# M0 pilot link task: Mishneh Torah halacha -> Bavli segments via Ein Mishpat links.
+name: pilot_mt_bavli
+task_dir: data/bench/pilot_mt_bavli
+conn_types: ["ein mishpat / ner mitsvah", "ein mishpat"]
+corpus_version: Wikisource Talmud Bavli        # the only allowed Hebrew Bavli base text
+query_he_versions: ["Torat Emet 363", "Torat Emet 370", "Wikisource Mishneh Torah"]  # first that has the ref
+n_queries: 1000
+seed: 13
+instruction: "Given a ruling from Maimonides' Mishneh Torah, retrieve the Talmud passages that are its sources"
+k_values: [1, 10, 100]
+mrr_k: 10
+max_length: 512
+batch_size: 64
+out_dir: artifacts/eval/pilot_mt_bavli
+emb_dir: artifacts/emb/pilot_mt_bavli

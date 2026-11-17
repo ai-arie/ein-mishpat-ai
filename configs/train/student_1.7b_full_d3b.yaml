@@ -1,0 +1,25 @@
+# M4 student 1.7B, full epoch with all D3b (2026-11-05). Otherwise the same as student-1.7b-p20-d3b.
+run_name: student-1.7b-full-d3b
+experiment: m4_train
+model: f2llm-1.7b               # configs/eval/models.yaml
+mix_dir: data/train/mix_d3b_all
+out_dir: models/student-1.7b-full-d3b
+seed: 13
+data_fraction: 1.0                 # one full epoch of mix_d3b_all: 5,148 steps
+epochs: 1
+mixture: {d1: 0.25, d2: 0.55, d3a: 0.20, d3b: 0.15}   # as abl-d3b-on: D3b ~13% of steps after renormalising
+batch_size: 512                 # queries per step over all GPUs (one task per step)
+negatives: 7                    # mined hard negatives per query (tasks without mined ones: in-batch only)
+max_length: {query: 256, doc: 512}
+lr: 2.0e-5
+weight_decay: 0.01
+warmup: 0.03
+max_grad_norm: 1.0
+temperature: 0.05               # InfoNCE (sweep 0.02-0.05 later)
+distill: {weight: 0.5, teacher_temperature: 0.02, student_temperature: 0.05}
+chunk: 32                       # sequences per re-encode with grad (gradient caching)
+chunk_nograd: 128
+log_every: 5
+eval_every: 50
+save_every: 50                  # ≤ ~30 min lost if the shell is killed (2026-11-03)
+keep_ckpts: 2

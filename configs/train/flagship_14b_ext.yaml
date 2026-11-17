@@ -1,0 +1,29 @@
+# Flagship continued by 250 steps from flagship-14b (2026-11-07): a new learning-rate cycle, not one clean 500-step run.
+run_name: flagship-14b-ext
+experiment: m4_train
+model: f2llm-14b                # configs/eval/models.yaml
+mix_dir: data/train/mix_d3b_all
+out_dir: models/flagship-14b-ext
+init_adapter: models/flagship-14b/final/adapter
+keep_steps: [50, 100, 150, 250]   # 300, 350, 400 and 500 steps in total, for the learning curve
+seed: 14                        # new batches, not a repeat of the first 250 steps
+data_fraction: 0.0486               # 250 steps, ~14 h on 8 GPUs (timing test, 2026-11-05)
+epochs: 1
+mixture: {d1: 0.25, d2: 0.55, d3a: 0.20, d3b: 0.15}
+lora: {r: 32, alpha: 32}        # all linear layers
+save_merged: true               # the release model; the adapter is saved next to it
+batch_size: 512
+negatives: 7
+max_length: {query: 256, doc: 512}
+lr: 5.0e-5                      # where a 500-step cosine would be at its midpoint
+weight_decay: 0.01
+warmup: 0.03
+max_grad_norm: 1.0
+temperature: 0.05
+distill: {weight: 0.0, teacher_temperature: 0.02, student_temperature: 0.05}   # docs: no distillation for the flagship
+chunk: 16
+chunk_nograd: 64
+log_every: 5
+eval_every: 50
+save_every: 25                  # ~80 min lost at most if the shell is killed
+keep_ckpts: 2

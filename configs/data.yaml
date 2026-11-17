@@ -1,0 +1,53 @@
+sefaria:
+  books_index: https://raw.githubusercontent.com/Sefaria/Sefaria-Export/master/books.json
+  bucket_base: https://storage.googleapis.com/sefaria-export
+  api_base: https://www.sefaria.org/api
+  out_dir: data/raw/sefaria
+  max_concurrency: 16          # bucket downloads
+  api_rate_per_sec: 2          # sefaria.org API, shared by all processes (file lock)
+  retries: 5
+  timeout_sec: 120
+  user_agent: "ein-mishpat-ai research downloader"
+  pilot:
+    titles: ["Genesis", "Mishnah Berakhot", "Berakhot", "Mishneh Torah, Reading the Shema", "Rashi on Genesis"]
+    n_random: 15
+    seed: 13
+licenses:
+  # must equal licenses.ALLOWED (tested). unknown = Sefaria label "unknown" or missing; Sefaria
+  # believes these are public domain (Sefaria's reply, 2026-11).
+  allowed: [public_domain, cc0, cc_by, cc_by_sa, unknown]
+  # An "unknown" version is excluded when the same edition (versionTitle + language) is NC / ND /
+  # copyright for another work (e.g. William Davidson, JPS, Koren). Applied in data/meta/versions.
+  unknown_inherits_restrictive_edition: true
+  # Versions Sefaria labels "unknown" that we treat as allowed. Decision 2026-10-30: same
+  # Torat Emet 370 source (toratemetfreeware.com) that Sefaria labels Public Domain for the other
+  # Torat Emet Mishneh Torah books. Manifest keeps Sefaria's label; license_source = "override".
+  overrides:
+    - {title: "Mishneh Torah, Blessings", versionTitle: "Torat Emet 370", language: Hebrew, license: public_domain}
+    - {title: "Mishneh Torah, Circumcision", versionTitle: "Torat Emet 370", language: Hebrew, license: public_domain}
+    - {title: "Mishneh Torah, Fringes", versionTitle: "Torat Emet 370", language: Hebrew, license: public_domain}
+    - {title: "Mishneh Torah, Tefillin, Mezuzah and the Torah Scroll", versionTitle: "Torat Emet 370", language: Hebrew, license: public_domain}
+    - {title: "Mishneh Torah, The Order of Prayer", versionTitle: "Torat Emet 370", language: Hebrew, license: public_domain}
+languages:
+  hebrew_folder: keep_all      # originals: Hebrew, Aramaic, Judeo-Arabic …; record actualLanguage
+  english_folder: en_only      # keep only actualLanguage == "en"
+topics:
+  out_dir: data/raw/sefaria/topics
+hf:
+  models:                      # all Apache-2.0, public
+    - codefuse-ai/F2LLM-v2-0.6B
+    - codefuse-ai/F2LLM-v2-1.7B
+    - codefuse-ai/F2LLM-v2-14B
+    - Qwen/Qwen3-Embedding-8B
+  dataset_files:               # results table only (MIT); NOT the benchmark pairs
+    - repo: Sefaria/Rabbinic-Embedding-Leaderboard
+      file: leaderboard.json
+      out: data/external/leaderboard.json
+processed:
+  versions: data/meta/versions.parquet
+  segment_parts: data/processed/segments
+  segments: data/processed/segments.parquet
+  links: data/processed/links.parquet
+  leakage: data/meta/leakage_exclusion.parquet
+  texts: data/processed/texts.parquet
+  max_expand: 5                # ranges with more segments stay passage-level (flagged)

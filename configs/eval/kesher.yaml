@@ -1,0 +1,18 @@
+# KesherBench evaluation (one config for every model, project rule 6 (README)).
+bench_dir: data/bench/kesher
+emb_dir: artifacts/emb/kesher
+out_dir: artifacts/eval/kesher
+split: dev
+seed: 13
+k_values: [1, 5, 10, 100]
+mrr_k: 10
+max_length: 512
+batch_size: 64
+tasks:   # task -> query instruction (instruction-style models; documents get no prompt)
+  K1_halacha_talmud: "Given a ruling from Maimonides' Mishneh Torah, retrieve the Talmud passages that are its sources"
+  K2a_commentary_torah: "Given a commentary on the Torah, retrieve the Torah verse it comments on"
+  K2b_commentary_talmud: "Given a commentary on the Talmud, retrieve the Talmud passage it comments on"
+  K3_gemara_mishnah: "Given a Talmud passage, retrieve the Mishnah it discusses or quotes"
+  K4a_bavli_yerushalmi: "Given a passage of the Babylonian Talmud, retrieve the parallel passages in the Jerusalem Talmud"
+  K4b_yerushalmi_bavli: "Given a passage of the Jerusalem Talmud, retrieve the parallel passages in the Babylonian Talmud"
+  K5_topic_sources: "Given a topic, retrieve Jewish texts that are key sources on this topic"

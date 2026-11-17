@@ -1,0 +1,15 @@
+# Sefaria Rabbinic Embedding Bench, reimplemented from the Space Sefaria/Rabbinic-Embedding-Bench
+# (revision in data/external/sefaria_space/REVISION; evaluation.py + models.py). Protocol "space":
+# Hebrew/Aramaic = queries, English = passages, full 3,708 x 3,708 pool, cosine on L2-normalised
+# embeddings. Models not in the Space's curated list (F2LLM, Qwen3) get no prompt, max_seq_length
+# min(512, model max), dtype "auto", encoded in contiguous chunks of 32 in dataset order.
+name: sefaria_bench
+data: data/external/sefaria_bench/data/benchmark.json
+protocol: space
+max_length: 512
+batch_size: 32
+k_values: [1, 5, 10]
+bitext_negatives: 10
+bitext_seed: 42
+seed: 13
+out_dir: artifacts/eval/sefaria_bench

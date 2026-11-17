@@ -1,0 +1,21 @@
+# Clean general-domain check (2026-11-08): the M5 tasks (WebFAQ, ArguAna) turned out to be in the base models'
+# training data. Belebele (facebook/belebele, CC-BY-SA-4.0, 2023): questions written by
+# annotators for it, none found in F2LLM-v2's data; passages are FLORES-200 sentences, ~25% of them partly seen via
+# sib200 (none >= 90%). Task = question -> its passage among the 488 passages of that language; same passages in Hebrew,
+# English and Arabic give monolingual and cross-lingual settings. Built by scripts/prep_belebele.py; scored by the
+# unchanged harness (eval/regression.py evaluate).
+name: regression_clean
+data_dir: data/bench/regression_clean
+out_dir: artifacts/eval/regression_clean
+seed: 13
+k_values: [1, 5, 10, 100]
+mrr_k: 10
+max_length: 512
+batch_size: 64
+source: {repo: facebook/belebele, revision: 7899cdfa4e1e0d733fd77c848e2c273cb1d32be2}
+tasks:
+  belebele_heb:     {query_lang: heb_Hebr, corpus_lang: heb_Hebr, instruction: "Given a question, retrieve the passage that answers it"}
+  belebele_eng:     {query_lang: eng_Latn, corpus_lang: eng_Latn, instruction: "Given a question, retrieve the passage that answers it"}
+  belebele_ara:     {query_lang: arb_Arab, corpus_lang: arb_Arab, instruction: "Given a question, retrieve the passage that answers it"}
+  belebele_eng2heb: {query_lang: eng_Latn, corpus_lang: heb_Hebr, instruction: "Given a question, retrieve the passage that answers it"}
+  belebele_heb2eng: {query_lang: heb_Hebr, corpus_lang: eng_Latn, instruction: "Given a question, retrieve the passage that answers it"}

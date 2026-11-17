@@ -1,0 +1,17 @@
+# Held-out works. Fixed 2026-11-01.
+# A work is held out if (a) its title is a base below, (b) it is a Mishneh Torah book of a listed
+# Sefer, or (c) all its schema base_text_titles are held-out bases (commentaries). Works on several
+# base texts (e.g. Rabbeinu Bahya on the whole Torah) are held out per node: a node whose name is a
+# held-out base or one of `node_aliases` (e.g. "Bamidbar").
+seed: 13
+test:
+  bases: [Sanhedrin, Yevamot, Chullin, Mishnah Sanhedrin, Mishnah Yevamot, Mishnah Chullin,
+          Jerusalem Talmud Sanhedrin, Jerusalem Talmud Yevamot, Numbers, Bamidbar Rabbah,
+          Sifrei Bamidbar]
+  mishneh_torah_sefarim: [Sefer Shoftim, Sefer Nashim]
+  node_aliases: [Bamidbar, Bemidbar, "Ba-Midbar"]
+dev:
+  bases: [Gittin, Bava Metzia, Mishnah Gittin, Mishnah Bava Metzia, Jerusalem Talmud Gittin,
+          Jerusalem Talmud Bava Metzia, Leviticus, Sifra]
+  mishneh_torah_sefarim: [Sefer Kinyan]
+  node_aliases: [Vayikra, "Va-Yikra"]

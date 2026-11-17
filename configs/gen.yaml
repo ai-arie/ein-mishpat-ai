@@ -1,0 +1,96 @@
+# M3b synthetic data via an OpenAI-compatible endpoint (.env: LLM_BASE_URL, LLM_API_KEY,
+# GEN_MODEL = openai/Qwen3.8-27B). Training only, never evaluated on, never published (rule 4).
+cache: data/gen/cache/responses.jsonl
+concurrency: 48
+# Generator settings compared in the trial (one model available, so the comparison is thinking
+# off vs on instead of two models). temperature 0 → deterministic, cache-friendly.
+settings:
+  no_think: {temperature: 0, max_tokens: 2048, chat_template_kwargs: {enable_thinking: false}}
+  think: {temperature: 0, max_tokens: 8192, chat_template_kwargs: {enable_thinking: true}}
+trial:
+  out_dir: data/gen/trial
+  seed: 13
+  min_words: 15
+  max_words: 200
+  # Hebrew/Aramaic segments with a free human English translation; Tanakh base text excluded
+  # (only its commentaries), Liturgy excluded (D3a targets rabbinic prose)
+  per_category: {Talmud: 8, Halakhah: 6, Midrash: 6, Tanakh: 5, Mishnah: 4, Kabbalah: 4,
+                 Chasidut: 4, Jewish Thought: 4, Musar: 3, Responsa: 3, Tosefta: 3}
+batch_test:   # several consecutive segments per request vs one per request (same segments)
+  out_dir: data/gen/batch_test
+  seed: 13
+  size: 8
+  min_words: 5
+  max_words: 200
+  max_tokens: 8192
+  per_category: {Talmud: 5, Halakhah: 4, Midrash: 4, Tanakh: 3, Mishnah: 3, Kabbalah: 2,
+                 Chasidut: 2, Jewish Thought: 2, Musar: 2, Responsa: 2, Tosefta: 1}
+d3a:   # full run, decided 2026-11-01: 500k segments, batched, 32 → 48 parallel
+  out_dir: data/gen/d3a
+  seed: 13
+  tier1_prefixes: ["Talmud", "Halakhah > Mishneh Torah", "Mishnah", "Tosefta", "Midrash", "Tanakh"]
+  tier1_segments: 350000     # KesherBench genres: Talmud, Mishneh Torah, Mishnah, Tosefta, Midrash, Tanakh commentaries
+  tier2_segments: 150000     # other halakhah, Kabbalah, Chasidut, responsa, thought, musar, liturgy
+  exclude_categories: [Reference]
+  min_words: 3
+  max_segment_tokens: 512    # training max length
+  batch_size: 8
+  max_gap: 5                 # segments of one node within 5 positions may share a batch
+  max_batch_tokens: 1500     # Hebrew tokens per request (the one merged test batch was long Midrash)
+  max_tokens_batch: 6144
+  glossary_from_block: 2     # abbreviation glossary in the prompt (2026-11-01); blocks 0-1 without
+  numerals_from_block: 4     # Hebrew-letter numerals after סי'/דף/פרק… → gematria digits in the text sent
+                             # (2026-11-02; test: 40/50 → 50/50 correct); blocks 0-3 without
+  block_segments: 25000      # progress summary per block
+  start_concurrency: 32
+  concurrency_levels: [16, 32, 48]
+  evening:                   # 2026-11-02: ≤ 32 in the working week; after the working day
+                             # (18:00 German time) rise again to 32 and 48 if the endpoint is fine
+    from_utc: 17             # evening = 17:00-06:00 UTC on weekdays, all day on weekends
+    to_utc: 6
+    day_max: 32              # working hours: never above 32 (16 → 32 allowed when fine, 2026-11-02)
+    cooldown_s: 3600         # after a step down, try again at most hourly
+    max_slowdown: 1.8        # 2026-11-02 23:30: allow 32 at night; at 32 requests ran 1.3-1.7x slower
+                             # per token than the quiet baseline but output tokens/s rose ~45% (no errors)
+    min_requests: 100        # chunks mostly resumed from the cache change nothing
+  chunks_per_block: 25       # concurrency checked after each ~1k segments (2026-11-02)
+  max_error_rate: 0.01       # failed requests (after retries) per request
+  max_retry_rate: 0.05
+  max_slowdown: 1.3          # s per output token vs the first 32-parallel block (not scaled by concurrency:
+                             # slower streams at 48 = we saturate the shared service → step down)
+  min_gain: 1.1              # a step up must raise output tokens/s by ≥ 10%, else step back
+  max_out_tokens: 90000000   # the full run was approved at ~79M projected (2026-11-01); pause beyond 90M
+  max_requests: 110000       # ~89k expected; cumulative projection still carries block 0's ~1.9k parser
+                             # fallbacks (≈ +15k projected), so the pause line sits above 105k
+  pause_after_segments: null   # 2026-11-01: paused at 50k for approval; the full run was approved
+                               # at 48 parallel (~70M output tokens OK, must not block other users)
+
+d3b: &d3b   # synthetic search queries, pilot (decided 2026-11-03: 100k passages today, full 300k
+       # tomorrow only if the pilot helps K5 — and only after the API key was rotated)
+  out_dir: data/gen/d3b/pilot
+  task: d3b_pilot            # token accounting
+  wait_key_after: "2026-11-03T10:15:00+00:00"   # the API key is rotated before D3b: start only once .env changed
+  seed: 17
+  segments: 100000
+  min_words: 8
+  max_segment_tokens: 512
+  exclude_categories: [Reference]
+  batch_size: 8              # consecutive segments of one node per request
+  max_batch_tokens: 1500
+  max_tokens: 2048           # answer: ~8 × (he + en query) as JSON
+  concurrency: 16            # fixed: runs in working hours (≤ 32, see d3a.evening)
+  block_batches: 1000        # ~7.5k segments per block (resumable unit, progress line)
+  max_error_rate: 0.01       # failed requests per request in a block → pause (exit 3)
+  max_unparsed_rate: 0.05    # answers not matching the format → pause (exit 3)
+  instruction: "Given a search query, retrieve Jewish texts that answer it or are key sources for it"
+
+d3b_ext:   # the remaining 200k passages (decided 2026-11-04; estimate 55M tokens, hard limit 80M)
+  <<: *d3b
+  out_dir: data/gen/d3b/ext
+  task: d3b_ext
+  wait_key_after: null
+  seed: 18
+  segments: 200000
+  exclude_dir: data/gen/d3b/pilot   # never the pilot's passages again
+  budget_tokens: 80000000           # stop before passing it (exit 4); report if the projection is above
+  budget_flag_after_blocks: 3

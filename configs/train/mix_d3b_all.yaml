@@ -1,0 +1,9 @@
+# M4 training mix + all D3b search queries, pilot + remaining passages (2026-11-05): the mix of the released models.
+out_dir: data/train/mix_d3b_all
+seed: 13
+dev_d1:              # held-out slice of human translation pairs (model selection only)
+  work_share: 0.02
+  max_pairs: 2000
+d3b:
+  dirs: [data/gen/d3b/pilot, data/gen/d3b/ext]
+  keep_rank: 50      # teacher finds the passage from its query in the top 50 of ~2.1M training docs
